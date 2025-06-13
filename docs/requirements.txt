@@ -1,0 +1,12 @@
+O sistema deve permitir o cadastro de médicos com nome, CRM e especialidade.
+O sistema deve permitir o cadastro de pacientes com nome, CPF e data de nascimento.
+O sistema deve gerenciar filas de atendimento por especialidade médica.
+O sistema deve registrar atendimentos, associando médicos e pacientes, com data e hora.
+O sistema deve gerar relatórios de atendimentos realizados por período.
+O sistema deve salvar e carregar dados de médicos, pacientes e atendimentos utilizando arquivos.
+
+O sistema deve ser desenvolvido em linguagem C.
+O sistema deve utilizar estruturas de dados dinâmicas, como listas encadeadas.
+O sistema deve ser modularizado, com separação de funcionalidades em diferentes arquivos.
+O sistema deve utilizar recursividade em pelo menos uma funcionalidade.
+O sistema deve ter uma interface de usuário em modo texto, com menus interativos.
