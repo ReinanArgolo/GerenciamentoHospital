@@ -1,4 +1,4 @@
-#include "cadastrar_especialidade.h"
+#include "especialidades.h"
 #include <string.h>
 
 void inicializarCadastroEspecialidade(CadastroEspecialidade* cadastro, const char* nomeArquivo) {
@@ -73,15 +73,22 @@ Especialidade* buscarEspecialidade(CadastroEspecialidade* cadastro, int codigo) 
     return NULL;
 }
 
-int cadastrarEspecialidade(CadastroEspecialidade* cadastro, int codigo, const char* nome) {
-    // Verificar se já existe especialidade com o mesmo código
-    if (existeEspecialidade(cadastro, codigo)) {
-        return 0; // Já existe
-    }
-    
+// Função atualizada para gerar código automaticamente
+int cadastrarEspecialidade(CadastroEspecialidade* cadastro, const char* nome) {
     // Verificar se atingiu o limite
     if (cadastro->quantidade >= MAX_ESPECIALIDADES) {
         return 0; // Limite atingido
+    }
+    
+    // Gerar código automaticamente (próximo código será quantidade + 1)
+    int codigo = cadastro->quantidade + 1;
+    
+    // Garantir que o código é único (caso haja exclusões, buracos, etc.)
+    while (existeEspecialidade(cadastro, codigo)) {
+        codigo++;
+        if (codigo > MAX_ESPECIALIDADES) {
+            return 0; // Não há códigos disponíveis
+        }
     }
     
     cadastro->lista[cadastro->quantidade].codigo = codigo;
@@ -94,7 +101,7 @@ int cadastrarEspecialidade(CadastroEspecialidade* cadastro, int codigo, const ch
     return salvarEspecialidades(cadastro);
 }
 
-// Função para gerenciar o cadastro de especialidades
+// Função para gerenciar o cadastro de especialidades (atualizada)
 void menuEspecialidades() {
     CadastroEspecialidade cadastro;
     inicializarCadastroEspecialidade(&cadastro, "especialidades.dat");
@@ -116,16 +123,13 @@ void menuEspecialidades() {
         switch(opcao) {
             case 1:
                 printf("\nCadastro de nova especialidade\n");
-                printf("Código da especialidade: ");
-                scanf("%d", &codigo);
-                getchar(); // Limpar o buffer
-                
                 printf("Nome da especialidade: ");
                 fgets(nome, MAX_NOME, stdin);
                 nome[strcspn(nome, "\n")] = 0; // Remover quebra de linha
                 
-                if (cadastrarEspecialidade(&cadastro, codigo, nome)) {
+                if (cadastrarEspecialidade(&cadastro, nome)) {
                     printf("Especialidade cadastrada com sucesso!\n");
+                    printf("Código gerado: %d\n", cadastro.quantidade); // Mostra o código gerado
                 } else {
                     printf("Erro ao cadastrar especialidade!\n");
                 }
@@ -165,16 +169,16 @@ void menuEspecialidades() {
     } while (opcao != 0);
 }
 
-// Você pode adicionar uma função para pré-cadastrar especialidades comuns
+// Função atualizada para pré-cadastrar especialidades comuns
 void cadastrarEspecialidadesPadrao(CadastroEspecialidade* cadastro) {
-    cadastrarEspecialidade(cadastro, 1, "Clínico Geral");
-    cadastrarEspecialidade(cadastro, 2, "Cardiologia");
-    cadastrarEspecialidade(cadastro, 3, "Ortopedia");
-    cadastrarEspecialidade(cadastro, 4, "Pediatria");
-    cadastrarEspecialidade(cadastro, 5, "Ginecologia");
-    cadastrarEspecialidade(cadastro, 6, "Dermatologia");
-    cadastrarEspecialidade(cadastro, 7, "Neurologia");
-    cadastrarEspecialidade(cadastro, 8, "Psiquiatria");
-    cadastrarEspecialidade(cadastro, 9, "Oftalmologia");
-    cadastrarEspecialidade(cadastro, 10, "Otorrinolaringologia");
+    cadastrarEspecialidade(cadastro, "Clínico Geral");
+    cadastrarEspecialidade(cadastro, "Cardiologia");
+    cadastrarEspecialidade(cadastro, "Ortopedia");
+    cadastrarEspecialidade(cadastro, "Pediatria");
+    cadastrarEspecialidade(cadastro, "Ginecologia");
+    cadastrarEspecialidade(cadastro, "Dermatologia");
+    cadastrarEspecialidade(cadastro, "Neurologia");
+    cadastrarEspecialidade(cadastro, "Psiquiatria");
+    cadastrarEspecialidade(cadastro, "Oftalmologia");
+    cadastrarEspecialidade(cadastro, "Otorrinolaringologia");
 }

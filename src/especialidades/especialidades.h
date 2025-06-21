@@ -28,7 +28,7 @@ int carregarEspecialidades(CadastroEspecialidade* cadastro);
 int salvarEspecialidades(CadastroEspecialidade* cadastro);
 
 // Cadastra uma nova especialidade
-int cadastrarEspecialidade(CadastroEspecialidade* cadastro, int codigo, const char* nome);
+int cadastrarEspecialidade(CadastroEspecialidade* cadastro, const char* nome);
 
 // Verifica se já existe especialidade com o mesmo código
 int existeEspecialidade(CadastroEspecialidade* cadastro, int codigo);
