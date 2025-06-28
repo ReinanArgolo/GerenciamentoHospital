@@ -11,22 +11,27 @@ void inicializarCadastroMedico(CadastroMedico* cadastro, const char* nomeArquivo
 }
 
 int carregarMedicos(CadastroMedico* cadastro) {
-    FILE* arquivo = fopen(cadastro->arquivo, "rb");
+    FILE* arquivo = fopen(cadastro->arquivo, "r");
     if (arquivo == NULL) {
         return 0; // Arquivo não existe, não é um erro
     }
     
-    size_t lidos = fread(&cadastro->quantidade, sizeof(int), 1, arquivo);
-    if (lidos != 1) {
-        fclose(arquivo);
-        return 0;
-    }
+    cadastro->quantidade = 0;
+    char linha[256];
     
-    if (cadastro->quantidade > 0) {
-        lidos = fread(cadastro->lista, sizeof(Medico), cadastro->quantidade, arquivo);
-        if (lidos != cadastro->quantidade) {
-            fclose(arquivo);
-            return 0;
+    // Ler linha por linha
+    while (fgets(linha, sizeof(linha), arquivo) && cadastro->quantidade < MAX_MEDICOS) {
+        int id, especialidade, crm;
+        char nome[100];
+        
+        // Formato CSV: id,nome,especialidade,crm
+        if (sscanf(linha, "%d,%99[^,],%d,%d", &id, nome, &especialidade, &crm) == 4) {
+            cadastro->lista[cadastro->quantidade].id = id;
+            strncpy(cadastro->lista[cadastro->quantidade].nome, nome, 99);
+            cadastro->lista[cadastro->quantidade].nome[99] = '\0';
+            cadastro->lista[cadastro->quantidade].especialidade = especialidade;
+            cadastro->lista[cadastro->quantidade].crm = crm;
+            cadastro->quantidade++;
         }
     }
     
@@ -35,23 +40,18 @@ int carregarMedicos(CadastroMedico* cadastro) {
 }
 
 int salvarMedicos(CadastroMedico* cadastro) {
-    FILE* arquivo = fopen(cadastro->arquivo, "wb");
+    FILE* arquivo = fopen(cadastro->arquivo, "w");
     if (arquivo == NULL) {
         return 0;
     }
     
-    size_t escritos = fwrite(&cadastro->quantidade, sizeof(int), 1, arquivo);
-    if (escritos != 1) {
-        fclose(arquivo);
-        return 0;
-    }
-    
-    if (cadastro->quantidade > 0) {
-        escritos = fwrite(cadastro->lista, sizeof(Medico), cadastro->quantidade, arquivo);
-        if (escritos != cadastro->quantidade) {
-            fclose(arquivo);
-            return 0;
-        }
+    // Escrever cada médico em formato CSV
+    for (int i = 0; i < cadastro->quantidade; i++) {
+        fprintf(arquivo, "%d,%s,%d,%d\n", 
+                cadastro->lista[i].id, 
+                cadastro->lista[i].nome,
+                cadastro->lista[i].especialidade,
+                cadastro->lista[i].crm);
     }
     
     fclose(arquivo);

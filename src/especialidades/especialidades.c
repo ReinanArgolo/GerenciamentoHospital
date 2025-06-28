@@ -1,5 +1,6 @@
 #include "especialidades.h"
 #include <string.h>
+#include <stdio.h>
 
 void inicializarCadastroEspecialidade(CadastroEspecialidade* cadastro, const char* nomeArquivo) {
     cadastro->quantidade = 0;
@@ -8,22 +9,25 @@ void inicializarCadastroEspecialidade(CadastroEspecialidade* cadastro, const cha
 }
 
 int carregarEspecialidades(CadastroEspecialidade* cadastro) {
-    FILE* arquivo = fopen(cadastro->arquivo, "rb");
+    FILE* arquivo = fopen(cadastro->arquivo, "r");
     if (arquivo == NULL) {
         return 0; // Arquivo não existe, não é um erro
     }
     
-    size_t lidos = fread(&cadastro->quantidade, sizeof(int), 1, arquivo);
-    if (lidos != 1) {
-        fclose(arquivo);
-        return 0;
-    }
+    cadastro->quantidade = 0;
+    char linha[256];
     
-    if (cadastro->quantidade > 0) {
-        lidos = fread(cadastro->lista, sizeof(Especialidade), cadastro->quantidade, arquivo);
-        if (lidos != cadastro->quantidade) {
-            fclose(arquivo);
-            return 0;
+    // Ler linha por linha
+    while (fgets(linha, sizeof(linha), arquivo) && cadastro->quantidade < MAX_ESPECIALIDADES) {
+        int codigo;
+        char nome[MAX_NOME];
+        
+        // Formato CSV: codigo,nome
+        if (sscanf(linha, "%d,%99[^\n]", &codigo, nome) == 2) {
+            cadastro->lista[cadastro->quantidade].codigo = codigo;
+            strncpy(cadastro->lista[cadastro->quantidade].nome, nome, MAX_NOME - 1);
+            cadastro->lista[cadastro->quantidade].nome[MAX_NOME - 1] = '\0';
+            cadastro->quantidade++;
         }
     }
     
@@ -32,23 +36,16 @@ int carregarEspecialidades(CadastroEspecialidade* cadastro) {
 }
 
 int salvarEspecialidades(CadastroEspecialidade* cadastro) {
-    FILE* arquivo = fopen(cadastro->arquivo, "wb");
+    FILE* arquivo = fopen(cadastro->arquivo, "w");
     if (arquivo == NULL) {
         return 0;
     }
     
-    size_t escritos = fwrite(&cadastro->quantidade, sizeof(int), 1, arquivo);
-    if (escritos != 1) {
-        fclose(arquivo);
-        return 0;
-    }
-    
-    if (cadastro->quantidade > 0) {
-        escritos = fwrite(cadastro->lista, sizeof(Especialidade), cadastro->quantidade, arquivo);
-        if (escritos != cadastro->quantidade) {
-            fclose(arquivo);
-            return 0;
-        }
+    // Escrever cada especialidade em formato CSV
+    for (int i = 0; i < cadastro->quantidade; i++) {
+        fprintf(arquivo, "%d,%s\n", 
+                cadastro->lista[i].codigo, 
+                cadastro->lista[i].nome);
     }
     
     fclose(arquivo);
@@ -101,24 +98,18 @@ int cadastrarEspecialidade(CadastroEspecialidade* cadastro, const char* nome) {
     return salvarEspecialidades(cadastro);
 }
 
-// Declarando as funções para cada opção do menu
-void cadastrarNovaEspecialidade(CadastroEspecialidade* cadastro) {
-    char nome[MAX_NOME];
-    printf("\nCadastro de nova especialidade\n");
-    printf("Nome da especialidade: ");
-    fgets(nome, MAX_NOME, stdin);
-    nome[strcspn(nome, "\n")] = 0; // Remover quebra de linha
-    
-    if (cadastrarEspecialidade(cadastro, nome)) {
-        printf("Especialidade cadastrada com sucesso!\n");
-        printf("Código gerado: %d\n", cadastro->lista[cadastro->quantidade-1].codigo); // Mostra o código gerado
-    } else {
-        printf("Erro ao cadastrar especialidade!\n");
-    }
+// Função atualizada para pré-cadastrar especialidades comuns
+void cadastrarEspecialidadesPadrao(CadastroEspecialidade* cadastro) {
+    cadastrarEspecialidade(cadastro, "Clínico Geral");
+    cadastrarEspecialidade(cadastro, "Cardiologia");
+    cadastrarEspecialidade(cadastro, "Dermatologia");
+    cadastrarEspecialidade(cadastro, "Ortopedia");
+    cadastrarEspecialidade(cadastro, "Pediatria");
+    cadastrarEspecialidade(cadastro, "Oftalmologia");
 }
 
+// Função não interativa para listar especialidades (usada por outros módulos)
 void listarEspecialidades(CadastroEspecialidade* cadastro) {
-    printf("\n=== ESPECIALIDADES CADASTRADAS ===\n");
     if (cadastro->quantidade == 0) {
         printf("Nenhuma especialidade cadastrada.\n");
     } else {
@@ -126,81 +117,4 @@ void listarEspecialidades(CadastroEspecialidade* cadastro) {
             printf("Código: %d - %s\n", cadastro->lista[i].codigo, cadastro->lista[i].nome);
         }
     }
-}
-
-void buscarEspecialidadePorCodigo(CadastroEspecialidade* cadastro) {
-    int codigo;
-    printf("\nBuscar especialidade\n");
-    printf("Informe o código: ");
-    scanf("%d", &codigo);
-    getchar(); // Limpar o buffer
-    
-    Especialidade* esp = buscarEspecialidade(cadastro, codigo);
-    if (esp != NULL) {
-        printf("Especialidade encontrada: %d - %s\n", esp->codigo, esp->nome);
-    } else {
-        printf("Especialidade não encontrada!\n");
-    }
-}
-
-void voltarAoMenuPrincipal(CadastroEspecialidade* cadastro) {
-    printf("Voltando ao menu principal...\n");
-    // Não usa o cadastro, mas mantém a assinatura consistente
-}
-
-void opcaoInvalida(CadastroEspecialidade* cadastro) {
-    printf("Opção inválida!\n");
-}
-
-// Definindo um tipo para ponteiro de função que recebe um CadastroEspecialidade*
-typedef void (*FuncaoMenu)(CadastroEspecialidade*);
-
-// Função para gerenciar o cadastro de especialidades (usando ponteiros para função)
-void menuEspecialidades() {
-    CadastroEspecialidade cadastro;
-    inicializarCadastroEspecialidade(&cadastro, "data/especialidades.dat");
-    carregarEspecialidades(&cadastro);
-    
-    // Array de ponteiros para funções
-    FuncaoMenu opcoes[5] = {
-        voltarAoMenuPrincipal,  // Opção 0
-        cadastrarNovaEspecialidade,
-        listarEspecialidades,
-        buscarEspecialidadePorCodigo,
-        opcaoInvalida  // Para opções fora do intervalo
-    };
-    
-    int opcao;
-    
-    do {
-        printf("\n=== CADASTRO DE ESPECIALIDADES ===\n");
-        printf("1 - Cadastrar nova especialidade\n");
-        printf("2 - Listar especialidades\n");
-        printf("3 - Buscar especialidade\n");
-        printf("0 - Voltar ao menu principal\n");
-        printf("Escolha uma opção: ");
-        scanf("%d", &opcao);
-        getchar(); // Limpar o buffer
-        
-        if (opcao >= 0 && opcao <= 3) {
-            opcoes[opcao](&cadastro);
-            if (opcao == 0) break; // Sai do loop se a opção for 0
-        } else {
-            opcoes[4](&cadastro); // Chama a função para opção inválida
-        }
-    } while (1);
-}
-
-// Função atualizada para pré-cadastrar especialidades comuns
-void cadastrarEspecialidadesPadrao(CadastroEspecialidade* cadastro) {
-    cadastrarEspecialidade(cadastro, "Clínico Geral");
-    cadastrarEspecialidade(cadastro, "Cardiologia");
-    cadastrarEspecialidade(cadastro, "Ortopedia");
-    cadastrarEspecialidade(cadastro, "Pediatria");
-    cadastrarEspecialidade(cadastro, "Ginecologia");
-    cadastrarEspecialidade(cadastro, "Dermatologia");
-    cadastrarEspecialidade(cadastro, "Neurologia");
-    cadastrarEspecialidade(cadastro, "Psiquiatria");
-    cadastrarEspecialidade(cadastro, "Oftalmologia");
-    cadastrarEspecialidade(cadastro, "Otorrinolaringologia");
 }

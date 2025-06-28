@@ -8,6 +8,7 @@ EXEC = "./output/hospital"
 all: $(EXEC)
 
 $(EXEC): $(OBJS)
+	@mkdir -p output
 	$(CC) $(OBJS) -o $(EXEC)
 
 %.o: %.c
