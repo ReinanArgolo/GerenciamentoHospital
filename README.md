@@ -52,9 +52,9 @@ clinic-management-system
 │   ├── utils.c
 │   └── utils.h
 ├── data
-│   ├── doctors.dat
-│   ├── patients.dat
-│   └── appointments.dat
+│   ├── doctors.csv
+│   ├── patients.csv
+│   └── appointments.csv
 ├── docs
 │   └── requirements.txt
 ├── Makefile
