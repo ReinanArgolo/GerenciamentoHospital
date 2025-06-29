@@ -12,4 +12,5 @@ typedef struct {
 void inicializarPaciente(Paciente* p, int id, const char* nome, int idade, const char* condicao);
 void exibirPaciente(const Paciente* p);
 
+
 #endif // PACIENTE_H

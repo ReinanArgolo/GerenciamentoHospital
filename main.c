@@ -9,6 +9,7 @@ int main() {
     int opcao;
     CadastroEspecialidade cadastroEsp;
     CadastroMedico cadastroMed;
+
     
     // Criar diretório data se não existir
     system("mkdir -p data");
